@@ -1,20 +1,13 @@
 const expressLayouts = require('express-ejs-layouts')
-const morgan = require('morgan')
 const express = require("express");
 const app = express();
 const port = 3000;
+const {loadContact, findContact} =require('./utils/contact.js')
 
 // gunakan ejs
 app.set("view engine", "ejs");
 // middleware thirparty
 app.use(expressLayouts)
-app.use(morgan('dev'))
-
-// application level middleware
-app.use((req,res,next)=>{
-    console.log('Time: ', Date.now())
-    next()
-})
 
 // built in middleware
 app.use(express.static('public'))
@@ -43,7 +36,12 @@ app.get("/about", (req, res) => {
   res.render("about", {layout:'layouts/main-layout'});
 });
 app.get("/contact", (req, res) => {
-  res.render("contact", {layout:'layouts/main-layout'});
+  const contacts = loadContact()
+  res.render("contact", {layout:'layouts/main-layout', contacts});
+});
+app.get("/contact/:nama", (req, res) => {
+  const contact = findContact(req.params.nama)
+  res.render("detail", {layout:'layouts/main-layout', contact});
 });
 // mendapatkan string di bagian id
 // http://localhost:3000/product/1/category/20
