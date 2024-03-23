@@ -1,0 +1,17 @@
+<h1><%=title%></title></h1>
+<h4>Daftar mahasiswa</h4>
+<% if (mahasiswa.length<1) { %>
+<p>Data Mahasiswa Masih Kosong.</p>
+<% } else { %> <% mahasiswa.forEach(mhs => { %>
+<ul>
+  <li>Nama: <%=mhs.nama%></li>
+  <li>Email: <%=mhs.email%></li>
+</ul>
+<% })} %>
+
+<!-- ejs dapat menambahkan syntax javascript pada html dengan kurung dan persen -->
+<!-- cara memberi variable -->
+<!-- < -->
+<!-- % const nama = 'sandika' %> -->
+<!-- cara menggunakan variable -->
+<h3>Hallo <%= nama %></h3>
