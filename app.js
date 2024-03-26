@@ -2,13 +2,7 @@ const expressLayouts = require("express-ejs-layouts");
 const express = require("express");
 const app = express();
 const port = 3000;
-const {
-  loadContact,
-  findContact,
-  addContact,
-  cekDuplikat,
-  deleteContact, updateContacts
-} = require("./utils/contact.js");
+const { Contact, mongoose } = require("./model/contact.js");
 const { check, body, validationResult } = require("express-validator");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
@@ -62,8 +56,8 @@ app.get("/", (req, res) => {
 app.get("/about", (req, res) => {
   res.render("about", { layout: "layouts/main-layout" });
 });
-app.get("/contact", (req, res) => {
-  const contacts = loadContact();
+app.get("/contact", async(req, res) => {
+  const contacts = await Contact.find();
   res.render("contact", {
     title: "form tambah data",
     layout: "layouts/main-layout",
@@ -72,115 +66,115 @@ app.get("/contact", (req, res) => {
   });
 });
 
-// halaman form tambah data
-app.get("/contact/add", (req, res) => {
-  // const contacts = loadContact()
-  res.render("add-contact", { layout: "layouts/main-layout" });
-});
-// proces data contact
-app.post(
-  "/contact",
-  [
-    body("nama").custom((value) => {
-      const duplikat = cekDuplikat(value);
-      if (duplikat) {
-        throw new Error("Nama sudah digunakan!");
-      }
-      return true;
-    }),
-    check("email", "email tidak valid").isEmail(),
-    check("noHP", "nomor hp tidak valid").isMobilePhone("id-ID"),
-  ],
-  (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      // return res.status(400).json({ errors: errors.array() });
-      res.render("add-contact", {
-        layout: "layouts/main-layout",
-        errors: errors.array(),
-      });
-    } else {
-      addContact(req.body);
-      // kirimkanflash msg
-      req.flash("msg", "Data contact berhasil ditambahkan!");
-      res.redirect("/contact");
-    }
-  }
-);
-// proses delete contact
-app.get("/contact/delete/:nama", (req, res) => {
-  const contact = findContact(req.params.nama);
-  // jika kontak tidak ada
-  if (!contact) {
-    res.status(404);
-    res.send("<h1>404</h1>");
-  } else {
-    deleteContact(req.params.nama);
-    req.flash("msg", "Data contact berhasil dihapus!");
-    res.redirect("/contact");
-  }
-});
-// form ubah data kontak
-app.get("/contact/edit/:nama", (req, res) => {
-  const contact = findContact(req.params.nama);
-  res.render("edit-contact", { layout: "layouts/main-layout", contact });
-});
-// proses ubah kontak
-app.post(
-  "/contact/update",
-  [
-    body("nama").custom((value, {req}) => {
-      const duplikat = cekDuplikat(value);
-      if (value !== req.body.oldName && duplikat) {
-        throw new Error("Nama sudah digunakan!");
-      }
-      return true;
-    }),
-    check("email", "email tidak valid").isEmail(),
-    check("noHP", "nomor hp tidak valid").isMobilePhone("id-ID"),
-  ],
-  (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      // return res.status(400).json({ errors: errors.array() });
-      res.render("edit-contact", {
-        layout: "layouts/main-layout",
-        errors: errors.array(),
-        contact: req.body
-      });
-    } else {
-      updateContacts(req.body);
-      // kirimkan flash msg
-      req.flash("msg", "Data contact berhasil diubah!");
-      res.redirect("/contact");
-    }
-  }
-);
+// // halaman form tambah data
+// app.get("/contact/add", (req, res) => {
+//   // const contacts = loadContact()
+//   res.render("add-contact", { layout: "layouts/main-layout" });
+// });
+// // proces data contact
+// app.post(
+//   "/contact",
+//   [
+//     body("nama").custom((value) => {
+//       const duplikat = cekDuplikat(value);
+//       if (duplikat) {
+//         throw new Error("Nama sudah digunakan!");
+//       }
+//       return true;
+//     }),
+//     check("email", "email tidak valid").isEmail(),
+//     check("noHP", "nomor hp tidak valid").isMobilePhone("id-ID"),
+//   ],
+//   (req, res) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//       // return res.status(400).json({ errors: errors.array() });
+//       res.render("add-contact", {
+//         layout: "layouts/main-layout",
+//         errors: errors.array(),
+//       });
+//     } else {
+//       addContact(req.body);
+//       // kirimkanflash msg
+//       req.flash("msg", "Data contact berhasil ditambahkan!");
+//       res.redirect("/contact");
+//     }
+//   }
+// );
+// // proses delete contact
+// app.get("/contact/delete/:nama", (req, res) => {
+//   const contact = findContact(req.params.nama);
+//   // jika kontak tidak ada
+//   if (!contact) {
+//     res.status(404);
+//     res.send("<h1>404</h1>");
+//   } else {
+//     deleteContact(req.params.nama);
+//     req.flash("msg", "Data contact berhasil dihapus!");
+//     res.redirect("/contact");
+//   }
+// });
+// // form ubah data kontak
+// app.get("/contact/edit/:nama", (req, res) => {
+//   const contact = findContact(req.params.nama);
+//   res.render("edit-contact", { layout: "layouts/main-layout", contact });
+// });
+// // proses ubah kontak
+// app.post(
+//   "/contact/update",
+//   [
+//     body("nama").custom((value, { req }) => {
+//       const duplikat = cekDuplikat(value);
+//       if (value !== req.body.oldName && duplikat) {
+//         throw new Error("Nama sudah digunakan!");
+//       }
+//       return true;
+//     }),
+//     check("email", "email tidak valid").isEmail(),
+//     check("noHP", "nomor hp tidak valid").isMobilePhone("id-ID"),
+//   ],
+//   (req, res) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//       // return res.status(400).json({ errors: errors.array() });
+//       res.render("edit-contact", {
+//         layout: "layouts/main-layout",
+//         errors: errors.array(),
+//         contact: req.body,
+//       });
+//     } else {
+//       updateContacts(req.body);
+//       // kirimkan flash msg
+//       req.flash("msg", "Data contact berhasil diubah!");
+//       res.redirect("/contact");
+//     }
+//   }
+// );
 // detail contact
-app.get("/contact/:nama", (req, res) => {
-  const contact = findContact(req.params.nama);
+app.get("/contact/:nama", async(req, res) => {
+  const contact = await Contact.findOne({nama:req.params.nama});
   res.render("detail", { layout: "layouts/main-layout", contact });
 });
-// mendapatkan string di bagian id
-// http://localhost:3000/product/1/category/20
-app.get("/product/:id/category/:idCat", (req, res) => {
-  res.send(
-    `product ID: ${req.params.id} <br> category ID: ${req.params.idCat}`
-  );
-});
-// mendapatkan string di bagian id menggunakan query
-// http://localhost:3000/product/1?category=shoes
-app.get("/product/:id", (req, res) => {
-  res.send(
-    `product ID: ${req.params.id} <br> category ID: ${req.query.category}`
-  );
-});
-// app.use digunakan untuk menjalankan middleware
-// contoh menangani 404
-app.use("/", (req, res) => {
-  res.status(404);
-  res.send("404");
-});
+// // mendapatkan string di bagian id
+// // http://localhost:3000/product/1/category/20
+// app.get("/product/:id/category/:idCat", (req, res) => {
+//   res.send(
+//     `product ID: ${req.params.id} <br> category ID: ${req.params.idCat}`
+//   );
+// });
+// // mendapatkan string di bagian id menggunakan query
+// // http://localhost:3000/product/1?category=shoes
+// app.get("/product/:id", (req, res) => {
+//   res.send(
+//     `product ID: ${req.params.id} <br> category ID: ${req.query.category}`
+//   );
+// });
+// // app.use digunakan untuk menjalankan middleware
+// // contoh menangani 404
+// app.use("/", (req, res) => {
+//   res.status(404);
+//   res.send("404");
+// });
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
